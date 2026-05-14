@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Breath Journey — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Manrope:wght@300..700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================
+     DESIGN TOKENS
+     ============================================ */
+  :root {
+    --sky-top:       #BAE6FD;
+    --sky-mid:       #DBEAFE;
+    --sky-bottom:    #E0F2FE;
+    --water-deep:    #0EA5E9;
+    --water-mid:     #38BDF8;
+    --water-light:   #7DD3FC;
+    --foam:          #F0F9FF;
+
+    --primary:       #0EA5E9;
+    --primary-dark:  #0284C7;
+    --accent-pink:   #F9A8D4;
+    --accent-pink-d: #EC4899;
+    --gold:          #FBBF24;
+    --gold-light:    #FDE68A;
+    --gold-dark:     #D97706;
+    --leaf:          #84CC16;
+    --leaf-dark:     #65A30D;
+
+    --ink-darkest:   #0F172A;
+    --ink-dark:      #1E293B;
+    --ink-mid:       #475569;
+    --ink-light:     #94A3B8;
+    --paper:         #FFFFFF;
+
+    --font-display:  'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:     'Manrope', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --r-sm: 12px;
+    --r-md: 20px;
+    --r-lg: 28px;
+    --r-xl: 40px;
+
+    --shadow-soft:   0 4px 24px rgba(15, 23, 42, 0.06);
+    --shadow-card:   0 8px 32px rgba(15, 23, 42, 0.08);
+    --shadow-lift:   0 20px 60px rgba(15, 23, 42, 0.12);
+  }
+
+  /* ============================================
+     BASE
+     ============================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-body);
+    color: var(--ink-darkest);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at top, #DBEAFE 0%, transparent 60%),
+      linear-gradient(180deg, #E0F2FE 0%, #F0F9FF 40%, #ECFEFF 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-x: hidden;
+  }
+
+  button { font-family: inherit; }
+
+  /* ============================================
+     APP CONTAINER
+     ============================================ */
+  .app {
+    width: 100%;
+    max-width: 920px;
+    background:
+      linear-gradient(180deg, #DBEAFE 0%, #E0F2FE 35%, #ECFEFF 70%, #F0FDFA 100%);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lift);
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .bg-mountains {
+    position: absolute;
+    top: 90px; left: 0; right: 0;
+    height: 200px;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-cloud {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+    animation: drift 60s linear infinite;
+  }
+  .bg-cloud.c1 { top: 30px; left: -60px; width: 120px; animation-duration: 80s; }
+  .bg-cloud.c2 { top: 70px; right: -40px; width: 90px; animation-duration: 110s; animation-direction: reverse; }
+
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(80px); }
+  }
+
+  /* ============================================
+     HEADER
+     ============================================ */
+  .header {
+    position: relative;
+    z-index: 5;
+    padding: 24px 28px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 16px;
+  }
+
+  .back-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .back-btn:hover { transform: translateX(-2px); box-shadow: var(--shadow-card); }
+  .back-btn svg { width: 16px; height: 16px; color: var(--ink-darkest); }
+
+  .title-block { text-align: center; padding-top: 2px; }
+
+  .title-icon {
+    display: inline-flex;
+    width: 28px; height: 28px;
+    color: var(--primary);
+    animation: float-icon 4s ease-in-out infinite;
+  }
+  @keyframes float-icon {
+    0%, 100% { transform: translateY(0);    opacity: 0.75; }
+    50%      { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: -0.02em;
+    color: var(--ink-darkest);
+    margin-top: 2px;
+    line-height: 1.05;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--ink-mid);
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+  }
+
+  .points-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 18px;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 130px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .points-card .leaf-icon {
+    width: 28px; height: 28px; color: var(--leaf); flex-shrink: 0;
+  }
+  .points-value {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink-darkest);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .points-label { font-size: 12px; color: var(--ink-mid); margin-top: 3px; }
+  .points-card.pulse { animation: points-pulse 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes points-pulse {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(132, 204, 22, 0.18), var(--shadow-card); }
+    100% { transform: scale(1); box-shadow: var(--shadow-soft); }
+  }
+
+  /* ============================================
+     SCENE
+     ============================================ */
+  .scene {
+    position: relative;
+    height: 380px;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .deco-island { position: absolute; pointer-events: none; z-index: 1; }
+  .deco-island.left  { left: -10px; bottom: 50px; width: 180px; }
+  .deco-island.right { right: -10px; top: 30px; width: 220px; }
+
+  .waterfall-splash {
+    position: absolute;
+    bottom: 40px; left: 80px;
+    width: 40px; height: 14px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, rgba(186,230,253,0.2) 70%, transparent 100%);
+    border-radius: 50%;
+    animation: splash 2.5s ease-in-out infinite;
+  }
+  @keyframes splash {
+    0%, 100% { transform: scale(1);   opacity: 0.7; }
+    50%      { transform: scale(1.3); opacity: 1; }
+  }
+
+  .meditation-zone {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -45%);
+    width: 280px; height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lotus-island {
+    position: absolute;
+    bottom: 38%;
+    width: 200px; height: 64px;
+    background:
+      radial-gradient(ellipse at 50% 30%, #BBF7D0 0%, #86EFAC 35%, #4ADE80 70%, #16A34A 100%);
+    border-radius: 50%;
+    box-shadow: 0 12px 24px rgba(22, 101, 52, 0.25), inset 0 -8px 16px rgba(22, 101, 52, 0.15);
+  }
+
+  .breath-aura {
+    position: absolute;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle,
+        rgba(253, 224, 71, 0.55) 0%,
+        rgba(251, 191, 36, 0.35) 30%,
+        rgba(251, 191, 36, 0.12) 55%,
+        rgba(251, 191, 36, 0) 75%);
+    animation: gentle-glow 6s ease-in-out infinite;
+  }
+  .breath-aura.celebrate { animation: aura-celebrate 1.4s ease-out; }
+  @keyframes gentle-glow {
+    0%, 100% { transform: scale(1);    opacity: 0.75; }
+    50%      { transform: scale(1.05); opacity: 0.95; }
+  }
+  @keyframes aura-celebrate {
+    0%   { transform: scale(1);   opacity: 0.75; }
+    35%  { transform: scale(1.35); opacity: 1; }
+    100% { transform: scale(1);   opacity: 0.75; }
+  }
+
+  .meditator {
+    position: relative;
+    z-index: 2;
+    animation: gentle-bob 8s ease-in-out infinite;
+  }
+  @keyframes gentle-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+
+  .lily-pad {
+    position: absolute;
+    width: 28px; height: 18px;
+    background: radial-gradient(ellipse at 60% 40%, #86EFAC, #16A34A);
+    border-radius: 50%;
+    opacity: 0.7;
+    box-shadow: 0 4px 8px rgba(22, 101, 52, 0.15);
+  }
+  .lily-pad.lp1 { top: 35%; left: 28%;  transform: rotate(-12deg); }
+  .lily-pad.lp2 { top: 60%; right: 30%; transform: rotate(15deg); width: 22px; height: 14px; }
+  .lily-pad.lp3 { top: 28%; right: 38%; transform: rotate(28deg); width: 24px; height: 16px; }
+
+  .scene-petals {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    overflow: hidden;
+  }
+  .petal {
+    position: absolute;
+    top: -20px;
+    width: 12px; height: 12px;
+    background: radial-gradient(circle at 35% 35%, #FBCFE8 0%, #F9A8D4 60%, #EC4899 100%);
+    border-radius: 50% 0 50% 0;
+    opacity: 0;
+    animation: petal-fall linear infinite;
+  }
+  @keyframes petal-fall {
+    0%   { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.8; }
+    90%  { opacity: 0.6; }
+    100% { transform: translate(var(--drift, 30px), 380px) rotate(720deg); opacity: 0; }
+  }
+
+  .breath-instruction {
+    position: absolute;
+    bottom: 22px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 14px 22px;
+    border-radius: 100px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 80%;
+    z-index: 4;
+    transition: all 0.4s ease;
+  }
+  .breath-instruction .wind-icon { width: 22px; height: 22px; color: var(--primary); flex-shrink: 0; }
+  .breath-instruction .text { font-size: 14px; color: var(--ink-dark); line-height: 1.4; transition: opacity 0.4s ease; }
+
+  /* ============================================
+     CELEBRATION BANNER
+     ============================================ */
+  .celebration-banner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 60%, #D97706 100%);
+    color: white;
+    padding: 22px 44px;
+    border-radius: var(--r-lg);
+    box-shadow: 0 24px 60px rgba(217, 119, 6, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.4);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 20;
+  }
+  .celebration-banner.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .celebration-banner .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 8px;
+  }
+  .celebration-banner .ctitle {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .celebration-banner .csub { font-size: 14px; opacity: 0.95; margin-top: 6px; }
+
+  /* ============================================
+     PROGRESS ROAD
+     ============================================ */
+  .progress-section {
+    position: relative;
+    z-index: 2;
+    padding: 4px 28px 18px;
+  }
+
+  .progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .progress-head .current-ms,
+  .progress-head .next-ms {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .progress-head .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-light);
+    font-weight: 600;
+  }
+  .progress-head .value {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink-darkest);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .progress-head .next-ms { text-align: right; }
+  .progress-head .next-ms .value { color: var(--primary-dark); }
+
+  .road-wrap {
+    position: relative;
+    padding: 14px 0; /* room for markers that overhang the rail */
+  }
+
+  .road-container {
+    position: relative;
+    height: 14px;
+    background: rgba(186, 230, 253, 0.55);
+    border-radius: 100px;
+    overflow: visible;
+    box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08);
+  }
+  .road-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38BDF8 0%, #0EA5E9 50%, #0284C7 100%);
+    border-radius: 100px;
+    width: 0%;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .road-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2.5s linear infinite;
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .milestone-markers {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .milestone-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px; height: 24px;
+    background: white;
+    border: 2px solid var(--water-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    transition: background 0.5s ease, border-color 0.5s ease,
+                box-shadow 0.5s ease,
+                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: auto;
+  }
+  .milestone-marker.reached {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    border-color: var(--gold);
+    box-shadow: 0 0 0 5px rgba(251, 191, 36, 0.22), 0 2px 8px rgba(217, 119, 6, 0.3);
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+  .milestone-marker .star-icon {
+    width: 12px; height: 12px;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .milestone-marker.reached .star-icon { opacity: 1; }
+
+  .milestone-marker .ms-label {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink-darkest);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    font-variant-numeric: tabular-nums;
+  }
+  .milestone-marker:hover .ms-label { opacity: 1; }
+
+  .progress-info {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-mid);
+  }
+  .progress-info strong {
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================
+     CONTROLS
+     ============================================ */
+  .controls {
+    padding: 0 28px 18px;
+    display: flex;
+    justify-content: center;
+  }
+  .start-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    padding: 14px 36px;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+    transition: all 0.25s ease;
+  }
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(14, 165, 233, 0.45);
+  }
+  .start-btn:active { transform: translateY(0); }
+  .start-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+  }
+  .start-btn .check-icon { width: 18px; height: 18px; }
+
+  /* ============================================
+     STATS BAR
+     ============================================ */
+  .stats-bar {
+    margin: 0 28px 28px;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    border-radius: var(--r-lg);
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 24px;
+    align-items: center;
+    color: white;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+  .stats-bar::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 60%; height: 200%;
+    background: radial-gradient(ellipse, rgba(56, 189, 248, 0.08), transparent 60%);
+    pointer-events: none;
+  }
+  .stat { display: flex; align-items: center; gap: 16px; position: relative; }
+  .stat-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon-wrap.blue {
+    background: linear-gradient(135deg, #38BDF8, #0284C7);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+  }
+  .stat-icon-wrap.gold {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+  }
+  .stat-icon-wrap svg { width: 24px; height: 24px; color: white; }
+
+  .stat-text { display: flex; flex-direction: column; }
+  .stat-label {
+    font-size: 12px;
+    color: #94A3B8;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat-divider {
+    width: 1px;
+    height: 42px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);
+  }
+  .stat-icon-wrap.bump { animation: stat-bump 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes stat-bump {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  /* ============================================
+     CONFETTI OVERLAY
+     ============================================ */
+  .confetti-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -40px;
+    animation: confetti-fall ease-in forwards;
+    will-change: transform, opacity;
+  }
+  .confetti-piece svg { display: block; }
+  @keyframes confetti-fall {
+    0%   { transform: translate3d(0, -40px, 0) rotate(0deg); opacity: 0; }
+    8%   { opacity: 1; }
+    100% { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(var(--spin, 720deg)); opacity: 1; }
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 640px) {
+    body { padding: 0; }
+    .app { border-radius: 0; min-height: 100vh; }
+    .header { padding: 20px 16px 12px; gap: 8px; }
+    .title { font-size: 26px; }
+    .points-card { padding: 10px 14px; min-width: 110px; }
+    .points-value { font-size: 20px; }
+    .scene { height: 320px; }
+    .meditation-zone { width: 220px; height: 220px; }
+    .lotus-island { width: 160px; height: 50px; }
+    .breath-aura { width: 200px; height: 200px; }
+    .progress-section { padding: 4px 18px 14px; }
+    .milestone-marker { width: 18px; height: 18px; }
+    .milestone-marker .star-icon { width: 9px; height: 9px; }
+    .controls { padding: 0 18px 14px; }
+    .stats-bar { margin: 0 16px 20px; padding: 18px 18px; gap: 16px; }
+    .stat-icon-wrap { width: 44px; height: 44px; }
+    .stat-icon-wrap svg { width: 20px; height: 20px; }
+    .stat-value { font-size: 22px; }
+    .deco-island { opacity: 0.6; }
+    .deco-island.left { width: 130px; }
+    .deco-island.right { width: 160px; }
+    .celebration-banner { padding: 18px 28px; }
+    .celebration-banner .ctitle { font-size: 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="app" id="app">
+
+    <!-- Atmospheric layers -->
+    <svg class="bg-cloud c1" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M15,30 Q5,30 5,22 Q5,14 15,14 Q15,6 25,6 Q35,6 38,14 Q50,12 55,22 Q60,30 50,30 Z" fill="white"/>
+    </svg>
+    <svg class="bg-cloud c2" viewBox="0 0 90 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10,22 Q2,22 2,16 Q2,10 10,10 Q12,4 20,4 Q28,4 30,10 Q40,9 43,16 Q46,22 38,22 Z" fill="white"/>
+    </svg>
+
+    <svg class="bg-mountains" viewBox="0 0 920 200" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="mtnGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#94B8D9"/>
+          <stop offset="1" stop-color="#C7DAEC"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,160 L80,90 L160,140 L240,70 L340,150 L440,80 L540,130 L640,75 L740,140 L840,95 L920,150 L920,200 L0,200 Z" fill="url(#mtnGrad)"/>
+    </svg>
+
+    <!-- HEADER -->
+    <header class="header">
+      <button class="back-btn" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+
+      <div class="title-block">
+        <span class="title-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+            <path d="M3 8h11a3 3 0 1 0-3-3"/>
+            <path d="M3 16h15a3 3 0 1 1-3 3"/>
+            <path d="M3 12h17"/>
+          </svg>
+        </span>
+        <h1 class="title">Breath Journey</h1>
+        <p class="subtitle">Breathe in rhythm. Earn points. Grow your calm.</p>
+      </div>
+
+      <div class="points-card" id="pointsCard">
+        <svg class="leaf-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C20 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>
+        </svg>
+        <div>
+          <div class="points-value" id="headerPoints">0</div>
+          <div class="points-label">Points</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- SCENE -->
+    <div class="scene">
+
+      <svg class="deco-island left" viewBox="0 0 200 200" aria-hidden="true">
+        <ellipse cx="100" cy="170" rx="95" ry="22" fill="#475569" opacity="0.25"/>
+        <defs>
+          <linearGradient id="rockGradL" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#94A3B8" stop-opacity="0.7"/>
+            <stop offset="1" stop-color="#475569" stop-opacity="0.3"/>
+          </linearGradient>
+          <linearGradient id="waterfallG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#BAE6FD"/>
+            <stop offset="1" stop-color="#7DD3FC"/>
+          </linearGradient>
+        </defs>
+        <path d="M20,160 Q30,130 50,128 Q60,110 80,115 Q100,105 120,118 Q140,115 160,130 Q175,140 175,165 Q175,180 100,180 Q25,180 20,160 Z" fill="#64748B"/>
+        <path d="M20,160 Q30,130 50,128 Q60,110 80,115 Q100,105 120,118 Q140,115 160,130 Q175,140 175,165 Q175,180 100,180 Q25,180 20,160 Z" fill="url(#rockGradL)"/>
+        <path d="M30,140 Q50,120 80,118 Q110,110 140,120 Q160,128 170,140" fill="none" stroke="#65A30D" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+        <ellipse cx="60" cy="125" rx="20" ry="6" fill="#86EFAC" opacity="0.8"/>
+        <ellipse cx="120" cy="120" rx="25" ry="7" fill="#86EFAC" opacity="0.8"/>
+        <rect x="68" y="60" width="6" height="60" fill="#92400E"/>
+        <rect x="118" y="60" width="6" height="60" fill="#92400E"/>
+        <rect x="58" y="56" width="76" height="6" rx="2" fill="#92400E"/>
+        <rect x="62" y="64" width="68" height="4" fill="#B45309"/>
+        <rect x="88" y="74" width="16" height="4" fill="#92400E"/>
+        <circle cx="40" cy="148" r="5" fill="#FBBF24"/>
+        <circle cx="40" cy="148" r="3" fill="#FDE68A"/>
+        <path d="M5,80 L5,160 L20,160 L20,80 Z" fill="url(#waterfallG)"/>
+      </svg>
+
+      <svg class="deco-island right" viewBox="0 0 240 220" aria-hidden="true">
+        <ellipse cx="120" cy="190" rx="115" ry="25" fill="#475569" opacity="0.22"/>
+        <defs>
+          <linearGradient id="rockGradR" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#94A3B8" stop-opacity="0.7"/>
+            <stop offset="1" stop-color="#475569" stop-opacity="0.3"/>
+          </linearGradient>
+        </defs>
+        <path d="M20,170 Q30,140 60,135 Q80,120 105,125 Q130,115 160,128 Q190,125 215,150 Q225,170 215,190 Q120,200 30,195 Q15,185 20,170 Z" fill="#64748B"/>
+        <path d="M20,170 Q30,140 60,135 Q80,120 105,125 Q130,115 160,128 Q190,125 215,150 Q225,170 215,190 Q120,200 30,195 Q15,185 20,170 Z" fill="url(#rockGradR)"/>
+        <ellipse cx="100" cy="145" rx="80" ry="14" fill="#86EFAC" opacity="0.9"/>
+        <ellipse cx="100" cy="148" rx="60" ry="8" fill="#4ADE80" opacity="0.5"/>
+        <path d="M75,145 Q72,110 68,75 Q67,60 62,55" stroke="#78350F" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M70,90 Q60,80 50,82" stroke="#78350F" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M70,75 Q80,65 90,68" stroke="#78350F" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="50" cy="70" r="14" fill="#F9A8D4"/>
+        <circle cx="65" cy="55" r="16" fill="#FBCFE8"/>
+        <circle cx="80" cy="62" r="14" fill="#F9A8D4"/>
+        <circle cx="58" cy="78" r="11" fill="#FBCFE8"/>
+        <circle cx="78" cy="78" r="10" fill="#F9A8D4"/>
+        <circle cx="68" cy="68" r="13" fill="#FBCFE8"/>
+        <circle cx="55" cy="58" r="2" fill="white" opacity="0.7"/>
+        <circle cx="72" cy="48" r="2" fill="white" opacity="0.7"/>
+        <circle cx="68" cy="72" r="2" fill="white" opacity="0.7"/>
+        <rect x="155" y="120" width="20" height="22" fill="#475569"/>
+        <polygon points="150,120 180,120 165,108" fill="#334155"/>
+        <rect x="158" y="125" width="14" height="14" fill="#1E293B"/>
+        <rect x="161" y="128" width="3" height="6" fill="#FBBF24"/>
+        <rect x="166" y="128" width="3" height="6" fill="#FBBF24"/>
+        <polygon points="160,108 170,108 165,100" fill="#334155"/>
+      </svg>
+
+      <div class="lily-pad lp1"></div>
+      <div class="lily-pad lp2"></div>
+      <div class="lily-pad lp3"></div>
+
+      <div class="waterfall-splash"></div>
+
+      <div class="meditation-zone">
+        <div class="lotus-island"></div>
+        <div class="breath-aura" id="breathAura"></div>
+        <div class="meditator" id="meditator">
+          <svg width="90" height="100" viewBox="0 0 90 100" aria-hidden="true">
+            <ellipse cx="45" cy="22" rx="14" ry="6" fill="#FDE68A" opacity="0.6"/>
+            <circle cx="45" cy="24" r="9" fill="#64748B"/>
+            <circle cx="45" cy="14" r="3" fill="#64748B"/>
+            <path d="M45 33 Q35 38 32 52 Q30 65 35 72 Q45 75 55 72 Q60 65 58 52 Q55 38 45 33 Z" fill="#475569"/>
+            <ellipse cx="30" cy="65" rx="10" ry="5" fill="#475569"/>
+            <ellipse cx="60" cy="65" rx="10" ry="5" fill="#475569"/>
+            <ellipse cx="45" cy="80" rx="28" ry="9" fill="#334155"/>
+            <ellipse cx="45" cy="78" rx="20" ry="5" fill="#475569"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="scene-petals" id="scenePetals" aria-hidden="true"></div>
+
+      <div class="celebration-banner" id="celebrationBanner" role="status" aria-live="polite">
+        <span class="badge">★ Milestone</span>
+        <div class="ctitle" id="celebTitle">You reached a milestone!</div>
+        <div class="csub" id="celebSub">Your calm grows stronger.</div>
+      </div>
+
+      <div class="breath-instruction" id="breathInstruction">
+        <svg class="wind-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 8h11a3 3 0 1 0-3-3"/>
+          <path d="M3 16h15a3 3 0 1 1-3 3"/>
+          <path d="M3 12h17"/>
+        </svg>
+        <span class="text" id="breathText">Take a breath. Tap below when you've completed your session.</span>
+      </div>
+    </div>
+
+    <!-- PROGRESS ROAD -->
+    <section class="progress-section" aria-label="Progress to next milestone">
+      <div class="progress-head">
+        <div class="current-ms">
+          <span class="label">Current</span>
+          <span class="value" id="currentMs">Start</span>
+        </div>
+        <div class="next-ms">
+          <span class="label">Next Milestone</span>
+          <span class="value" id="nextMs">1,000</span>
+        </div>
+      </div>
+
+      <div class="road-wrap">
+        <div class="road-container">
+          <div class="road-fill" id="roadFill"></div>
+          <div class="milestone-markers" id="milestoneMarkers"></div>
+        </div>
+      </div>
+
+      <div class="progress-info">
+        <span id="progressText">
+          <strong>0</strong> / 1,000 points to your next milestone
+        </span>
+      </div>
+    </section>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <button class="start-btn" id="completeBtn">
+        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span id="completeBtnText">Complete Session</span>
+      </button>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-icon-wrap blue" id="sessionsIcon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h11a3 3 0 1 0-3-3"/>
+            <path d="M3 16h15a3 3 0 1 1-3 3"/>
+            <path d="M3 12h17"/>
+          </svg>
+        </div>
+        <div class="stat-text">
+          <span class="stat-label">Sessions</span>
+          <span class="stat-value" id="sessionsValue">0</span>
+        </div>
+      </div>
+
+      <div class="stat-divider"></div>
+
+      <div class="stat">
+        <div class="stat-icon-wrap gold" id="pointsIcon">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div class="stat-text">
+          <span class="stat-label">Total Points</span>
+          <span class="stat-value" id="totalPointsValue">0</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="confetti-overlay" id="confettiOverlay" aria-hidden="true"></div>
+
+<script>
+/* =================================================================
+   BREATH JOURNEY — Interactive Prototype
+   -----------------------------------------------------------------
+   Behaviour:
+   - "Complete Session" button awards 250 points each press.
+   - Milestones: 1000, 2500, then +1500 increments (10 total).
+   - Each milestone reached = gold marker on road + confetti shower
+     + celebration banner.
+   ================================================================= */
+
+// -----------------------------------------------------------------
+// STATE
+// -----------------------------------------------------------------
+const state = {
+  totalPoints: 0,
+  sessions: 0,
+  pointsPerSession: 250,
+
+  // 10 milestones: 1000, 2500, then +1500 each up to 14500.
+  milestones: [1000, 2500, 4000, 5500, 7000, 8500, 10000, 11500, 13000, 14500],
+
+  busy: false,
+};
+
+// -----------------------------------------------------------------
+// DOM
+// -----------------------------------------------------------------
+const $ = (sel) => document.querySelector(sel);
+const els = {
+  headerPoints:      $('#headerPoints'),
+  pointsCard:        $('#pointsCard'),
+  currentMs:         $('#currentMs'),
+  nextMs:            $('#nextMs'),
+  roadFill:          $('#roadFill'),
+  milestoneMarkers:  $('#milestoneMarkers'),
+  progressText:      $('#progressText'),
+  completeBtn:       $('#completeBtn'),
+  completeBtnText:   $('#completeBtnText'),
+  sessionsValue:     $('#sessionsValue'),
+  totalPointsValue:  $('#totalPointsValue'),
+  sessionsIcon:      $('#sessionsIcon'),
+  pointsIcon:        $('#pointsIcon'),
+  breathAura:        $('#breathAura'),
+  breathText:        $('#breathText'),
+  celebrationBanner: $('#celebrationBanner'),
+  celebTitle:        $('#celebTitle'),
+  celebSub:          $('#celebSub'),
+  confettiOverlay:   $('#confettiOverlay'),
+  scenePetals:       $('#scenePetals'),
+};
+
+// -----------------------------------------------------------------
+// MILESTONE MATH
+// -----------------------------------------------------------------
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const maxMilestone = () => state.milestones[state.milestones.length - 1];
+
+function getCurrentMilestone(points) {
+  let last = 0;
+  for (const m of state.milestones) {
+    if (m <= points) last = m;
+    else break;
+  }
+  return last;
+}
+
+function getNextMilestone(points) {
+  return state.milestones.find((m) => m > points) ?? null;
+}
+
+function milestonesCrossed(prev, next) {
+  return state.milestones.filter((m) => m > prev && m <= next);
+}
+
+// -----------------------------------------------------------------
+// RENDER
+// -----------------------------------------------------------------
+function renderMilestoneMarkers() {
+  els.milestoneMarkers.innerHTML = '';
+  const max = maxMilestone();
+
+  state.milestones.forEach((m) => {
+    const marker = document.createElement('div');
+    marker.className = 'milestone-marker';
+    marker.style.left = ((m / max) * 100).toFixed(2) + '%';
+    if (state.totalPoints >= m) marker.classList.add('reached');
+
+    marker.innerHTML = `
+      <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span class="ms-label">${fmt(m)} pts</span>
+    `;
+    els.milestoneMarkers.appendChild(marker);
+  });
+}
+
+function renderUI() {
+  const max = maxMilestone();
+  const current = getCurrentMilestone(state.totalPoints);
+  const next = getNextMilestone(state.totalPoints);
+  const fillPct = Math.min((state.totalPoints / max) * 100, 100);
+
+  els.headerPoints.textContent     = fmt(state.totalPoints);
+  els.totalPointsValue.textContent = fmt(state.totalPoints);
+  els.sessionsValue.textContent    = fmt(state.sessions);
+
+  els.currentMs.textContent = current === 0 ? 'Start' : fmt(current);
+  els.nextMs.textContent    = next ? fmt(next) : 'Complete!';
+  els.roadFill.style.width  = fillPct.toFixed(2) + '%';
+
+  if (next) {
+    const bandSize = next - current;
+    const inBand   = state.totalPoints - current;
+    els.progressText.innerHTML =
+      `<strong>${fmt(inBand)}</strong> / ${fmt(bandSize)} points to your next milestone`;
+  } else {
+    els.progressText.innerHTML = `<strong>Journey complete!</strong> You've reached every milestone.`;
+  }
+
+  renderMilestoneMarkers();
+}
+
+// Micro-animations
+function pulsePointsCard() {
+  els.pointsCard.classList.remove('pulse');
+  void els.pointsCard.offsetWidth;
+  els.pointsCard.classList.add('pulse');
+}
+function bumpIcon(el) {
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+}
+function celebrateAura() {
+  els.breathAura.classList.remove('celebrate');
+  void els.breathAura.offsetWidth;
+  els.breathAura.classList.add('celebrate');
+  setTimeout(() => els.breathAura.classList.remove('celebrate'), 1500);
+}
+
+// -----------------------------------------------------------------
+// CONFETTI
+// -----------------------------------------------------------------
+const confettiColors = ['#FBBF24', '#F59E0B', '#FDE68A', '#F9A8D4', '#7DD3FC', '#86EFAC', '#FFFFFF'];
+
+const buildStarSVG = (color, size = 20) => `
+  <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" aria-hidden="true">
+    <path d="M12 2l2.9 6 6.6.7-5 4.5 1.5 6.5L12 16.8 5.9 19.7 7.5 13.2 2.5 8.7 9.1 8z"/>
+  </svg>`;
+const buildPetalSVG = (color = '#F9A8D4', size = 14) => `
+  <svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 2 C16 6, 20 10, 12 22 C4 10, 8 6, 12 2 Z" fill="${color}"/>
+  </svg>`;
+const buildSparkSVG = (color = '#FFFFFF', size = 10) => `
+  <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/>
+  </svg>`;
+
+function launchConfetti({ count = 100 } = {}) {
+  const overlay = els.confettiOverlay;
+  const vw = window.innerWidth;
+
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+
+    piece.style.left = (Math.random() * vw) + 'px';
+    piece.style.setProperty('--drift', ((Math.random() - 0.5) * 360).toFixed(0) + 'px');
+    piece.style.setProperty('--spin',  ((Math.random() * 1440) - 720).toFixed(0) + 'deg');
+
+    const duration = 2.4 + Math.random() * 2.2;
+    const delay    = Math.random() * 0.6;
+    piece.style.animationDuration = duration + 's';
+    piece.style.animationDelay    = delay + 's';
+
+    const r = Math.random();
+    const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    if (r < 0.7)      piece.innerHTML = buildStarSVG(color,  16 + Math.random() * 14);
+    else if (r < 0.9) piece.innerHTML = buildPetalSVG(color, 12 + Math.random() * 10);
+    else              piece.innerHTML = buildSparkSVG(color, 6  + Math.random() * 6);
+
+    overlay.appendChild(piece);
+    setTimeout(() => piece.remove(), (duration + delay) * 1000 + 100);
+  }
+}
+
+// -----------------------------------------------------------------
+// CELEBRATION BANNER
+// -----------------------------------------------------------------
+function showCelebrationBanner(milestoneValue) {
+  const idx   = state.milestones.indexOf(milestoneValue);
+  const total = state.milestones.length;
+
+  let title, sub;
+  if (idx === 0) {
+    title = `First milestone — ${fmt(milestoneValue)} points!`;
+    sub   = 'A beautiful beginning. Keep breathing.';
+  } else if (idx === total - 1) {
+    title = `Journey complete — ${fmt(milestoneValue)} points!`;
+    sub   = 'You\u2019ve reached every milestone.';
+  } else {
+    title = `You reached ${fmt(milestoneValue)} points!`;
+    sub   = `Milestone ${idx + 1} of ${total} — your calm grows stronger.`;
+  }
+
+  els.celebTitle.textContent = title;
+  els.celebSub.textContent   = sub;
+  els.celebrationBanner.classList.add('show');
+  setTimeout(() => els.celebrationBanner.classList.remove('show'), 2600);
+}
+
+// -----------------------------------------------------------------
+// SESSION COMPLETION (each click = +250 pts, +1 session)
+// -----------------------------------------------------------------
+function completeSession() {
+  if (state.busy) return;
+
+  // No more milestones to award? Friendly message and stop.
+  if (getNextMilestone(state.totalPoints) === null) {
+    els.breathText.style.opacity = '0';
+    setTimeout(() => {
+      els.breathText.textContent = 'You\u2019ve reached every milestone. A new path may begin soon.';
+      els.breathText.style.opacity = '1';
+    }, 200);
+    return;
+  }
+
+  state.busy = true;
+  els.completeBtn.disabled = true;
+
+  const prevPoints = state.totalPoints;
+  const newPoints  = prevPoints + state.pointsPerSession;
+  state.totalPoints = newPoints;
+  state.sessions   += 1;
+
+  // Detect milestone(s) crossed in this single award
+  const crossed = milestonesCrossed(prevPoints, newPoints);
+
+  // Render everything — CSS transitions handle smoothness
+  renderUI();
+  pulsePointsCard();
+  bumpIcon(els.pointsIcon);
+  bumpIcon(els.sessionsIcon);
+  celebrateAura();
+
+  // Update the breath-instruction message
+  els.breathText.style.opacity = '0';
+  setTimeout(() => {
+    els.breathText.textContent =
+      crossed.length > 0
+        ? `Beautiful work. +${state.pointsPerSession} points — and a milestone reached!`
+        : `Beautiful. +${state.pointsPerSession} points earned this session.`;
+    els.breathText.style.opacity = '1';
+  }, 200);
+
+  // Fire confetti + banner for every milestone crossed this session
+  crossed.forEach((milestone, idx) => {
+    setTimeout(() => {
+      launchConfetti({ count: 110 });
+      showCelebrationBanner(milestone);
+    }, idx * 700);
+  });
+
+  // Re-enable the button after a short cooldown
+  setTimeout(() => {
+    state.busy = false;
+    els.completeBtn.disabled = false;
+  }, 500);
+}
+
+// -----------------------------------------------------------------
+// AMBIENT PETALS (decorative drift across the scene)
+// -----------------------------------------------------------------
+function spawnScenePetals(amount) {
+  for (let i = 0; i < amount; i++) {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+
+    const startX = Math.random() * 100;
+    const drift  = (Math.random() - 0.5) * 120;
+    const dur    = 6 + Math.random() * 6;
+    const delay  = Math.random() * 4;
+    const size   = 8 + Math.random() * 8;
+
+    petal.style.left   = startX + '%';
+    petal.style.width  = size + 'px';
+    petal.style.height = size + 'px';
+    petal.style.setProperty('--drift', drift + 'px');
+    petal.style.animationDuration = dur + 's';
+    petal.style.animationDelay    = delay + 's';
+
+    els.scenePetals.appendChild(petal);
+    setTimeout(() => petal.remove(), (dur + delay) * 1000 + 200);
+  }
+}
+setInterval(() => {
+  if (els.scenePetals.children.length < 4) spawnScenePetals(2);
+}, 3500);
+
+// -----------------------------------------------------------------
+// EVENTS
+// -----------------------------------------------------------------
+els.completeBtn.addEventListener('click', completeSession);
+
+// Spacebar shortcut
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !state.busy) {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+      completeSession();
+    }
+  }
+});
+
+// -----------------------------------------------------------------
+// INIT
+// -----------------------------------------------------------------
+renderUI();
+spawnScenePetals(6);
+</script>
+</body>
+</html>
